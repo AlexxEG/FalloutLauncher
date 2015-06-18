@@ -1,1 +1,1 @@
-See [FalloutLauncher Replacer for Steam on Nexus Mods](http://www.nexusmods.com/fallout3/mods/21364/?) for description.
+See [FalloutLauncher Replacer for Steam](http://www.nexusmods.com/fallout3/mods/21364/?) on Nexus Mods for description.
