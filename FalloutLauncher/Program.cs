@@ -36,7 +36,7 @@ namespace FalloutLauncher
                 goto exit;
 
             _log.WriteLine();
-            _log.WriteLine("FOSE path: \"{0}\"", FLAG_FOSE);
+            _log.WriteLine("FOSE path: \"{0}\"", FOSE_PATH);
             _log.WriteLine("Fallout 3 Launcher path: \"{0}\"", LAUNCHER_PATH);
             _log.WriteLine("Mod Organizer path: \"{0}\"", MOD_ORGANIZER_PATH);
             _log.WriteLine();
@@ -60,7 +60,7 @@ namespace FalloutLauncher
                     Start("Fallout 3 Launcher", LAUNCHER_PATH);
                     break;
                 case ConsoleKey.D2:
-                    Start("FOSE", FLAG_FOSE);
+                    Start("FOSE", FOSE_PATH);
                     break;
                 case ConsoleKey.D3:
                     Start("Mod Organizer", MOD_ORGANIZER_PATH);
