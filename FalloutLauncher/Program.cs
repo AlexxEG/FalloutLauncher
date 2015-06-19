@@ -12,11 +12,13 @@ namespace FalloutLauncher
         private const string FLAG_FOSE = "--fose";
         private const string FLAG_LAUNCHER = "--launcher";
         private const string FLAG_MO = "--mo";
+        private const string FLAG_START = "--start";
 
         private static string FOSE_PATH = "fose_loader.exe";
         private static string LAUNCHER_PATH = "FalloutLauncher_ORG.exe";
         private static string MOD_ORGANIZER_PATH = @"Mod Organizer\ModOrganizer.exe";
 
+        static ConsoleKeyInfo _input;
         static StreamWriter _log;
 
         static void Main(string[] args)
@@ -48,13 +50,14 @@ namespace FalloutLauncher
             Console.WriteLine();
             Console.Write("What do you want to start: ");
 
-            var input = Console.ReadKey();
+            if (_input.KeyChar == '\0')
+                _input = Console.ReadKey();
 
-            _log.WriteLine("Input character: " + input.KeyChar);
+            _log.WriteLine("Input character: " + _input.KeyChar);
 
             Console.Clear();
 
-            switch (input.Key)
+            switch (_input.Key)
             {
                 case ConsoleKey.D1:
                     Start("Fallout 3 Launcher", LAUNCHER_PATH);
@@ -69,7 +72,7 @@ namespace FalloutLauncher
                     WriteAndLogLine("Existing...");
                     break;
                 default:
-                    WriteAndLogLine("Unrecognized input: {{{0}}}", input.Key);
+                    WriteAndLogLine("Unrecognized input: {{{0}}}", _input.Key);
                     Console.WriteLine();
                     Console.WriteLine("Press any key to exit...");
                     Console.ReadKey();
@@ -107,6 +110,21 @@ namespace FalloutLauncher
                     case FLAG_MO:
                         i++;
                         MOD_ORGANIZER_PATH = args[i];
+                        break;
+                    case FLAG_START:
+                        i++;
+                        switch (args[i])
+                        {
+                            case "launcher":
+                                _input = new ConsoleKeyInfo('1', ConsoleKey.D1, false, false, false);
+                                break;
+                            case "fose":
+                                _input = new ConsoleKeyInfo('2', ConsoleKey.D2, false, false, false);
+                                break;
+                            case "mo":
+                                _input = new ConsoleKeyInfo('3', ConsoleKey.D3, false, false, false);
+                                break;
+                        }
                         break;
                     default:
                         // Handle unrecognized flag
