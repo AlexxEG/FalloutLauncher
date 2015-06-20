@@ -23,7 +23,7 @@ namespace FalloutLauncher
 
         static void Main(string[] args)
         {
-            Console.Title = "FalloutLauncher";
+            Console.Title = "FalloutLauncher " + VERSION;
 
             _log = new StreamWriter(LOG_FILE, true)
             {
