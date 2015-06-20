@@ -113,7 +113,7 @@ namespace FalloutLauncher
                         break;
                     case FLAG_START:
                         i++;
-                        switch (args[i])
+                        switch (args[i].ToLower())
                         {
                             case "launcher":
                                 _input = new ConsoleKeyInfo('1', ConsoleKey.D1, false, false, false);
