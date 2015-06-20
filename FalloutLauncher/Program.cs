@@ -7,7 +7,7 @@ namespace FalloutLauncher
     class Program
     {
         private const string LOG_FILE = "FalloutLauncher.log";
-        private const string VERSION = "1.1";
+        private const string VERSION = "1.2";
 
         private const string FLAG_FOSE = "--fose";
         private const string FLAG_LAUNCHER = "--launcher";
