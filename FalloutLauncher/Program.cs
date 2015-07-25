@@ -38,15 +38,15 @@ namespace FalloutLauncher
                 goto exit;
 
             _log.WriteLine();
-            _log.WriteLine("FOSE path: \"{0}\"", FOSE_PATH);
             _log.WriteLine("Fallout 3 Launcher path: \"{0}\"", LAUNCHER_PATH);
+            _log.WriteLine("FOSE path: \"{0}\"", FOSE_PATH);
             _log.WriteLine("Mod Organizer path: \"{0}\"", MOD_ORGANIZER_PATH);
             _log.WriteLine();
 
-            Console.WriteLine("1.   Fallout 3 Launcher");
-            Console.WriteLine("2.   FOSE");
-            Console.WriteLine("3.   Mod Organizer");
-            Console.WriteLine("Esc: Exit Launcher");
+            Console.WriteLine("1:   Fallout 3 Launcher");
+            Console.WriteLine("2:   FOSE");
+            Console.WriteLine("3:   Mod Organizer");
+            Console.WriteLine("Esc: Exit");
             Console.WriteLine();
             Console.Write("What do you want to start: ");
 
