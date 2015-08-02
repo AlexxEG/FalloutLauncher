@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace FalloutLauncher
 {
@@ -21,9 +26,38 @@ namespace FalloutLauncher
         static ConsoleKeyInfo _input;
         static StreamWriter _log;
 
+        #region Console Window Position & Size
+
+        // This region contains methods for setting console window's size and position.
+
+        const int SWP_NOSIZE = 0x0001;
+
+        [DllImport("kernel32.dll", ExactSpelling = true)]
+        private static extern IntPtr GetConsoleWindow();
+
+        private static IntPtr MyConsole = GetConsoleWindow();
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowPos")]
+        public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr hwnd, ref Rect rectangle);
+
+        public struct Rect
+        {
+            public int Left { get; set; }
+            public int Top { get; set; }
+            public int Right { get; set; }
+            public int Bottom { get; set; }
+        }
+
+        #endregion
+
         static void Main(string[] args)
         {
             Console.Title = "FalloutLauncher " + VERSION;
+
+            CenterConsole();
 
             _log = new StreamWriter(LOG_FILE, true)
             {
@@ -35,7 +69,7 @@ namespace FalloutLauncher
             _log.WriteLine("Steam FalloutLauncher ({0})", VERSION);
 
             if (!ProcessArguments(args))
-                goto exit;
+                goto exit; // Exit if application fails to process arguments
 
             _log.WriteLine();
             _log.WriteLine("Fallout 3 Launcher path: \"{0}\"", LAUNCHER_PATH);
@@ -43,41 +77,7 @@ namespace FalloutLauncher
             _log.WriteLine("Mod Organizer path: \"{0}\"", MOD_ORGANIZER_PATH);
             _log.WriteLine();
 
-            Console.WriteLine("1:   Fallout 3 Launcher");
-            Console.WriteLine("2:   FOSE");
-            Console.WriteLine("3:   Mod Organizer");
-            Console.WriteLine("Esc: Exit");
-            Console.WriteLine();
-            Console.Write("What do you want to start: ");
-
-            if (_input.KeyChar == '\0')
-                _input = Console.ReadKey();
-
-            _log.WriteLine("Input character: " + _input.KeyChar);
-
-            Console.Clear();
-
-            switch (_input.Key)
-            {
-                case ConsoleKey.D1:
-                    Start("Fallout 3 Launcher", LAUNCHER_PATH);
-                    break;
-                case ConsoleKey.D2:
-                    Start("FOSE", FOSE_PATH);
-                    break;
-                case ConsoleKey.D3:
-                    Start("Mod Organizer", MOD_ORGANIZER_PATH);
-                    break;
-                case ConsoleKey.Escape:
-                    WriteAndLogLine("Exiting...");
-                    break;
-                default:
-                    WriteAndLogLine("Unrecognized input: {{{0}}}", _input.Key);
-                    Console.WriteLine();
-                    Console.WriteLine("Press any key to exit...");
-                    Console.ReadKey();
-                    break;
-            }
+            ShowMainPage();
 
         exit:
 
@@ -88,6 +88,30 @@ namespace FalloutLauncher
             _log.Close();
         }
 
+        /// <summary>
+        /// Centers the console window in the current Screen.
+        /// </summary>
+        static void CenterConsole()
+        {
+            // Get screen rectangle of current screen
+            var screenRect = Screen.FromPoint(new Point(Console.WindowLeft, Console.WindowTop)).WorkingArea;
+
+            // Get window rect of the console window
+            Rect windowRect = new Rect();
+            GetWindowRect(MyConsole, ref windowRect);
+
+            SetWindowPos(MyConsole,
+                0,
+                (screenRect.Width / 2) - ((windowRect.Right - windowRect.Left + 1) / 2),
+                (screenRect.Height / 2) - ((windowRect.Bottom - windowRect.Top + 1) / 2),
+                0,
+                0,
+                SWP_NOSIZE);
+        }
+
+        /// <summary>
+        /// Processes the application arguments, setting the static variables.
+        /// </summary>
         static bool ProcessArguments(string[] args)
         {
             if (args != null && args.Length > 0)
@@ -137,6 +161,175 @@ namespace FalloutLauncher
             return true;
         }
 
+        /// <summary>
+        /// Shows the main page after clearing.
+        /// </summary>
+        static void ShowMainPage()
+        {
+            Console.Clear();
+
+            Console.WriteLine("1:   Fallout 3 Launcher");
+            Console.WriteLine("2:   FOSE");
+            Console.WriteLine("3:   Mod Organizer");
+            Console.WriteLine();
+            Console.WriteLine("9:   Tools");
+            Console.WriteLine("Esc: Exit");
+            Console.WriteLine();
+            Console.Write("Select an option: ");
+
+            if (_input.KeyChar == '\0')
+                _input = Console.ReadKey();
+
+            _log.WriteLine("Input character: " + _input.KeyChar);
+
+            Console.Clear();
+
+            switch (_input.Key)
+            {
+                case ConsoleKey.D1:
+                    Start("Fallout 3 Launcher", LAUNCHER_PATH);
+                    break;
+                case ConsoleKey.D2:
+                    Start("FOSE", FOSE_PATH);
+                    break;
+                case ConsoleKey.D3:
+                    Start("Mod Organizer", MOD_ORGANIZER_PATH);
+                    break;
+                case ConsoleKey.D9:
+                    // Reset input so it wont auto start when going back
+                    _input = new ConsoleKeyInfo();
+
+                    ShowTools();
+                    break;
+                case ConsoleKey.Escape:
+                    WriteAndLogLine("Exiting...");
+                    break;
+                default:
+                    WriteAndLogLine("Unrecognized input: {{{0}}}", _input.Key);
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+
+                    // Reset input so it wont auto start when going back
+                    _input = new ConsoleKeyInfo();
+
+                    ShowMainPage();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Shows the Tools page after clearing.
+        /// </summary>
+        static void ShowTools()
+        {
+            Console.Clear();
+
+            Console.WriteLine("1:   Troubleshooter");
+            Console.WriteLine();
+            Console.WriteLine("Esc: Back");
+            Console.WriteLine();
+            Console.Write("Select an option: ");
+
+            ConsoleKeyInfo input = Console.ReadKey();
+
+            switch (input.Key)
+            {
+                case ConsoleKey.D1:
+                    RunTroubleshooter();
+                    break;
+                case ConsoleKey.Escape:
+                    ShowMainPage();
+                    break;
+                default:
+                    WriteAndLogLine("Unrecognized input: {{{0}}}", _input.Key);
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                    ShowTools();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Runs the Troubleshooter, attempting to find any issues
+        /// that can prevent the Steam features and overlay from working.
+        /// </summary>
+        static void RunTroubleshooter()
+        {
+            Console.Clear();
+
+            Console.WriteLine("Running Troubleshooter");
+            Console.WriteLine("[Info] You can ignore failures if they don't apply to your use.");
+            Console.WriteLine();
+            Console.WriteLine("[.......] Finding Fallout 3 Launcher...");
+            Console.WriteLine("[.......] Finding FOSE...");
+            Console.WriteLine("[.......] Finding Mod Organizer...");
+            Console.WriteLine("[.......] Checking file permissions...");
+
+            int cursorLeft = Console.CursorLeft;
+            int cursorTop = Console.CursorTop;
+
+            // Check Fallout 3 Launcher
+            Console.SetCursorPosition(1, 3);
+
+            Console.Write(File.Exists(LAUNCHER_PATH) ? "Success" : "Failed.");
+            // End
+
+            // Check FOSE
+            Console.SetCursorPosition(1, 4);
+
+            Console.Write(File.Exists(FOSE_PATH) ? "Success" : "Failed.");
+            // End
+
+            // Check Mod Organizer
+            Console.SetCursorPosition(1, 5);
+
+            Console.Write(File.Exists(MOD_ORGANIZER_PATH) ? "Success" : "Failed.");
+            // End
+
+            // Check File Permissions
+            Console.SetCursorPosition(1, 6);
+
+            var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers");
+            var layers = new Dictionary<string, string>();
+
+            // Store every value key pair in dictionary for easy use
+            foreach (var valueName in key.GetValueNames())
+            {
+                layers.Add(valueName, key.GetValue(valueName).ToString());
+            }
+
+            string[] filesToCheck = new string[] 
+            { 
+                LAUNCHER_PATH,
+                FOSE_PATH,
+                MOD_ORGANIZER_PATH,
+                "Fallout3.exe",
+                "FalloutLauncher.exe"
+            };
+
+            foreach (string file in filesToCheck)
+            {
+                if (layers.ContainsKey(Path.GetFullPath(file)))
+                {
+                    if (layers[Path.GetFullPath(file)].ToLower().Contains("runasadmin"))
+                    {
+                        Console.Write("Failed.");
+                    }
+                }
+            }
+            // End
+
+            Console.SetCursorPosition(cursorLeft, cursorTop);
+
+            Console.ReadKey();
+        }
+
+        /// <summary>
+        /// Starts an executable from the <paramref name="path"/> variable.
+        /// <paramref name="name"/> variable is used only in the console to inform the user of progress.
+        /// </summary>
         static void Start(string name, string path)
         {
             if (!File.Exists(path))
@@ -164,16 +357,56 @@ namespace FalloutLauncher
             }
         }
 
+        /// <summary>
+        /// Writes message to both log and console window.
+        /// </summary>
         static void WriteAndLogLine(string message, params object[] args)
         {
             _log.WriteLine(message, args);
             Console.WriteLine(message, args);
         }
 
+        /// <summary>
+        /// Writes message to both log and console window.
+        /// </summary>
         static void WriteAndLogLine(object value)
         {
             _log.WriteLine(value);
             Console.WriteLine(value);
+        }
+
+        /// <summary>
+        /// Attempts to find normal Fallout Launcher using a mix of common places and search pattern.
+        /// </summary>
+        static string FindLauncher()
+        {
+            var directory = new DirectoryInfo(Environment.CurrentDirectory);
+            //System.AppDomain.CurrentDomain.FriendlyName.ToString();
+
+            foreach (var file in directory.GetFiles("*Launcher*.exe", SearchOption.TopDirectoryOnly))
+            {
+                // Ignore files under 1 MB
+                if (file.Length >= 1000000)
+                    return file.FullName;
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Attempts to find Mod Organizer using a mix of common places and search pattern.
+        /// </summary>
+        static string FindModOrganizer()
+        {
+            var directory = new DirectoryInfo(Environment.CurrentDirectory);
+            var foundDirs = directory.GetDirectories("Mod*Organizer", SearchOption.TopDirectoryOnly);
+
+            foreach (var dir in foundDirs)
+            {
+
+            }
+
+            return string.Empty;
         }
     }
 }
