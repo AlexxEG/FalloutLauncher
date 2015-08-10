@@ -1,27 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using Microsoft.Win32;
 
 namespace FalloutLauncher
 {
     class Program
     {
-        private const string LOG_FILE = "FalloutLauncher.log";
-        private const string VERSION = "1.2";
+        const string LOG_FILE = "FalloutLauncher.log";
+        const string VERSION = "1.2";
 
-        private const string FLAG_FOSE = "--fose";
-        private const string FLAG_LAUNCHER = "--launcher";
-        private const string FLAG_MO = "--mo";
-        private const string FLAG_START = "--start";
+        const string FLAG_FOSE = "--fose";
+        const string FLAG_LAUNCHER = "--launcher";
+        const string FLAG_MO = "--mo";
+        const string FLAG_START = "--start";
 
-        private static string FOSE_PATH = "fose_loader.exe";
-        private static string LAUNCHER_PATH = "FalloutLauncher_ORG.exe";
-        private static string MOD_ORGANIZER_PATH = @"Mod Organizer\ModOrganizer.exe";
+        static string FOSE_PATH = "fose_loader.exe";
+        static string LAUNCHER_PATH = "FalloutLauncher_ORG.exe";
+        static string MOD_ORGANIZER_PATH = @"Mod Organizer\ModOrganizer.exe";
 
         static ConsoleKeyInfo _input;
         static StreamWriter _log;
