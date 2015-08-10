@@ -64,7 +64,7 @@ namespace FalloutLauncher
                 AutoFlush = true
             };
 
-            _log.WriteLine("=================START=================");
+            _log.WriteLine("================ START ================");
             _log.WriteLine(DateTime.Now);
             _log.WriteLine("Steam FalloutLauncher ({0})", VERSION);
 
@@ -81,7 +81,7 @@ namespace FalloutLauncher
 
         exit:
 
-            _log.WriteLine("==================END==================");
+            _log.WriteLine("================= END =================");
             _log.WriteLine();
 
             _log.Flush();
