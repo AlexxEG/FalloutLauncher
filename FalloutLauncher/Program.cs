@@ -172,7 +172,6 @@ namespace FalloutLauncher
             Console.WriteLine("2:   FOSE");
             Console.WriteLine("3:   Mod Organizer");
             Console.WriteLine();
-            Console.WriteLine("9:   Tools");
             Console.WriteLine("Esc: Exit");
             Console.WriteLine();
             Console.Write("Select an option: ");
@@ -195,12 +194,6 @@ namespace FalloutLauncher
                 case ConsoleKey.D3:
                     Start("Mod Organizer", MOD_ORGANIZER_PATH);
                     break;
-                case ConsoleKey.D9:
-                    // Reset input so it wont auto start when going back
-                    _input = new ConsoleKeyInfo();
-
-                    ShowTools();
-                    break;
                 case ConsoleKey.Escape:
                     WriteAndLogLine("Exiting...");
                     break;
@@ -216,114 +209,6 @@ namespace FalloutLauncher
                     ShowMainPage();
                     break;
             }
-        }
-
-        /// <summary>
-        /// Shows the Tools page after clearing.
-        /// </summary>
-        static void ShowTools()
-        {
-            Console.Clear();
-
-            Console.WriteLine("1:   Troubleshooter");
-            Console.WriteLine();
-            Console.WriteLine("Esc: Back");
-            Console.WriteLine();
-            Console.Write("Select an option: ");
-
-            ConsoleKeyInfo input = Console.ReadKey();
-
-            switch (input.Key)
-            {
-                case ConsoleKey.D1:
-                    RunTroubleshooter();
-                    break;
-                case ConsoleKey.Escape:
-                    ShowMainPage();
-                    break;
-                default:
-                    WriteAndLogLine("Unrecognized input: {{{0}}}", _input.Key);
-                    Console.WriteLine();
-                    Console.WriteLine("Press any key to continue...");
-                    Console.ReadKey();
-                    ShowTools();
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Runs the Troubleshooter, attempting to find any issues
-        /// that can prevent the Steam features and overlay from working.
-        /// </summary>
-        static void RunTroubleshooter()
-        {
-            Console.Clear();
-
-            Console.WriteLine("Running Troubleshooter");
-            Console.WriteLine("[Info] You can ignore failures if they don't apply to your use.");
-            Console.WriteLine();
-            Console.WriteLine("[.......] Finding Fallout 3 Launcher...");
-            Console.WriteLine("[.......] Finding FOSE...");
-            Console.WriteLine("[.......] Finding Mod Organizer...");
-            Console.WriteLine("[.......] Checking file permissions...");
-
-            int cursorLeft = Console.CursorLeft;
-            int cursorTop = Console.CursorTop;
-
-            // Check Fallout 3 Launcher
-            Console.SetCursorPosition(1, 3);
-
-            Console.Write(File.Exists(LAUNCHER_PATH) ? "Success" : "Failed.");
-            // End
-
-            // Check FOSE
-            Console.SetCursorPosition(1, 4);
-
-            Console.Write(File.Exists(FOSE_PATH) ? "Success" : "Failed.");
-            // End
-
-            // Check Mod Organizer
-            Console.SetCursorPosition(1, 5);
-
-            Console.Write(File.Exists(MOD_ORGANIZER_PATH) ? "Success" : "Failed.");
-            // End
-
-            // Check File Permissions
-            Console.SetCursorPosition(1, 6);
-
-            var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers");
-            var layers = new Dictionary<string, string>();
-
-            // Store every value key pair in dictionary for easy use
-            foreach (var valueName in key.GetValueNames())
-            {
-                layers.Add(valueName, key.GetValue(valueName).ToString());
-            }
-
-            string[] filesToCheck = new string[] 
-            { 
-                LAUNCHER_PATH,
-                FOSE_PATH,
-                MOD_ORGANIZER_PATH,
-                "Fallout3.exe",
-                "FalloutLauncher.exe"
-            };
-
-            foreach (string file in filesToCheck)
-            {
-                if (layers.ContainsKey(Path.GetFullPath(file)))
-                {
-                    if (layers[Path.GetFullPath(file)].ToLower().Contains("runasadmin"))
-                    {
-                        Console.Write("Failed.");
-                    }
-                }
-            }
-            // End
-
-            Console.SetCursorPosition(cursorLeft, cursorTop);
-
-            Console.ReadKey();
         }
 
         /// <summary>
