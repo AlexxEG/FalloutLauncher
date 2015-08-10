@@ -288,7 +288,10 @@ namespace FalloutLauncher
 
             foreach (var dir in foundDirs)
             {
+                var foundExes = dir.GetFiles("Mod*Organizer.exe", SearchOption.TopDirectoryOnly);
 
+                if (foundExes.Length > 0)
+                    return foundExes[0].FullName;
             }
 
             return string.Empty;
