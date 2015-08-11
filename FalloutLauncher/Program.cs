@@ -17,10 +17,16 @@ namespace FalloutLauncher
         const string FLAG_MO = "--mo";
         const string FLAG_START = "--start";
 
-        static string FOSE_PATH = "fose_loader.exe";
-        static string LAUNCHER_PATH = "FalloutLauncher_ORG.exe";
-        static string MOD_ORGANIZER_PATH = @"Mod Organizer\ModOrganizer.exe";
+        // Path constants for comparing to determine if paths has been changed from arguments
+        const string DEFAULT_PATH_FOSE = "fose_loader.exe";
+        const string DEFAULT_PATH_LAUNCHER = "FalloutLauncher_ORG.exe";
+        const string DEFAULT_PATH_MOD_ORGANIZER = @"Mod Organizer\ModOrganizer.exe";
 
+        static string FOSE_PATH = DEFAULT_PATH_FOSE;
+        static string LAUNCHER_PATH = DEFAULT_PATH_LAUNCHER;
+        static string MOD_ORGANIZER_PATH = DEFAULT_PATH_MOD_ORGANIZER;
+
+        static AutoStart _autoStart = AutoStart.None;
         static ConsoleKeyInfo _input;
         static StreamWriter _log;
 
@@ -69,13 +75,37 @@ namespace FalloutLauncher
             if (!ProcessArguments(args))
                 goto exit; // Exit if application fails to process arguments
 
+            // Print after processing arguments
             _log.WriteLine();
             _log.WriteLine("Fallout 3 Launcher path: \"{0}\"", LAUNCHER_PATH);
             _log.WriteLine("FOSE path: \"{0}\"", FOSE_PATH);
             _log.WriteLine("Mod Organizer path: \"{0}\"", MOD_ORGANIZER_PATH);
             _log.WriteLine();
 
-            ShowMainPage();
+            // Try to automatically find original launcher and Mod Organizer,
+            // but don't if they have been changed, that means they was set with an argument.
+
+            if (LAUNCHER_PATH == DEFAULT_PATH_LAUNCHER)
+                LAUNCHER_PATH = FindLauncher();
+
+            if (MOD_ORGANIZER_PATH == DEFAULT_PATH_MOD_ORGANIZER)
+                MOD_ORGANIZER_PATH = FindModOrganizer();
+
+            switch (_autoStart)
+            {
+                case AutoStart.None:
+                    ShowMainPage();
+                    break;
+                case AutoStart.FOSE:
+                    Start("FOSE", FOSE_PATH, true);
+                    break;
+                case AutoStart.Launcher:
+                    Start("Fallout 3 Launcher", LAUNCHER_PATH, true);
+                    break;
+                case AutoStart.ModOrganizer:
+                    Start("Mod Organizer", MOD_ORGANIZER_PATH, true);
+                    break;
+            }
 
         exit:
 
@@ -138,13 +168,13 @@ namespace FalloutLauncher
                         switch (args[i].ToLower())
                         {
                             case "launcher":
-                                _input = new ConsoleKeyInfo('1', ConsoleKey.D1, false, false, false);
+                                _autoStart = AutoStart.Launcher;
                                 break;
                             case "fose":
-                                _input = new ConsoleKeyInfo('2', ConsoleKey.D2, false, false, false);
+                                _autoStart = AutoStart.FOSE;
                                 break;
                             case "mo":
-                                _input = new ConsoleKeyInfo('3', ConsoleKey.D3, false, false, false);
+                                _autoStart = AutoStart.ModOrganizer;
                                 break;
                         }
                         break;
@@ -184,13 +214,13 @@ namespace FalloutLauncher
             switch (_input.Key)
             {
                 case ConsoleKey.D1:
-                    Start("Fallout 3 Launcher", LAUNCHER_PATH);
+                    Start("Fallout 3 Launcher", LAUNCHER_PATH, true);
                     break;
                 case ConsoleKey.D2:
-                    Start("FOSE", FOSE_PATH);
+                    Start("FOSE", FOSE_PATH, true);
                     break;
                 case ConsoleKey.D3:
-                    Start("Mod Organizer", MOD_ORGANIZER_PATH);
+                    Start("Mod Organizer", MOD_ORGANIZER_PATH, true);
                     break;
                 case ConsoleKey.Escape:
                     WriteAndLogLine("Exiting...");
@@ -212,8 +242,9 @@ namespace FalloutLauncher
         /// <summary>
         /// Starts an executable from the <paramref name="path"/> variable.
         /// <paramref name="name"/> variable is used only in the console to inform the user of progress.
+        /// <param name="quiet">Set to true to quietly start process, unless there is an error.</param>
         /// </summary>
-        static void Start(string name, string path)
+        static void Start(string name, string path, bool quiet)
         {
             if (!File.Exists(path))
             {
@@ -224,9 +255,17 @@ namespace FalloutLauncher
             {
                 try
                 {
-                    WriteAndLogLine("Attempting to start {0}...", name);
+                    if (quiet)
+                        _log.WriteLine("Attempting to start {0}...", name);
+                    else
+                        WriteAndLogLine("Attempting to start {0}...", name);
+
                     Process.Start(path);
-                    WriteAndLogLine("Successful! Now exiting...");
+
+                    if (quiet)
+                        _log.WriteLine("Successful! Now exiting...");
+                    else
+                        WriteAndLogLine("Successful! Now exiting...");
                 }
                 catch (Exception ex)
                 {
@@ -273,7 +312,7 @@ namespace FalloutLauncher
                     return file.FullName;
             }
 
-            return string.Empty;
+            return DEFAULT_PATH_LAUNCHER;
         }
 
         /// <summary>
@@ -292,7 +331,15 @@ namespace FalloutLauncher
                     return foundExes[0].FullName;
             }
 
-            return string.Empty;
+            return DEFAULT_PATH_MOD_ORGANIZER;
         }
+    }
+
+    enum AutoStart
+    {
+        None,
+        FOSE,
+        Launcher,
+        ModOrganizer
     }
 }
