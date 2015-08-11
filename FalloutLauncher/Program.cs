@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -9,8 +10,6 @@ namespace FalloutLauncher
 {
     class Program
     {
-        const string Version = "1.2";
-
         const string LogFile = "FalloutLauncher.log";
 
         // Path constants for comparing to determine if paths has been changed from arguments
@@ -30,6 +29,16 @@ namespace FalloutLauncher
         static AutoStart _autoStart = AutoStart.None;
         static ConsoleKeyInfo _input;
         static StreamWriter _log;
+
+        static string Version
+        {
+            get
+            {
+                return string.Format("{0}.{1}",
+                    Assembly.GetEntryAssembly().GetName().Version.Major,
+                    Assembly.GetEntryAssembly().GetName().Version.Minor);
+            }
+        }
 
         #region Console Window Position & Size
 
