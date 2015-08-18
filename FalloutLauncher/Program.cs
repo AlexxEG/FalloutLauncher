@@ -315,7 +315,7 @@ namespace FalloutLauncher
             var directory = new DirectoryInfo(Environment.CurrentDirectory);
             //System.AppDomain.CurrentDomain.FriendlyName.ToString();
 
-            foreach (var file in directory.GetFiles("*Launcher*.exe", SearchOption.TopDirectoryOnly))
+            foreach (var file in directory.GetFiles("*FalloutLauncher*.exe", SearchOption.TopDirectoryOnly))
             {
                 // Ignore files under 1 MB
                 if (file.Length >= 1000000)
