@@ -233,7 +233,7 @@ namespace FalloutLauncher
                     Start("Mod Organizer", PathModOrganizer, true);
                     break;
                 case ConsoleKey.Escape:
-                    WriteAndLogLine("Exiting...");
+                    _log.WriteLine("Exiting...");
                     break;
                 default:
                     WriteAndLogLine("Unrecognized input: {{{0}}}", _input.Key);
