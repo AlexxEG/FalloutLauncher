@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Ini;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -10,6 +11,7 @@ namespace FalloutLauncher
 {
     class Program
     {
+        const string IniFile = "FalloutLauncher.ini";
         const string LogFile = "FalloutLauncher.log";
 
         // Path constants for comparing to determine if paths has been changed from arguments
@@ -22,10 +24,28 @@ namespace FalloutLauncher
         const string FlagMO = "--mo";
         const string FlagStart = "--start";
 
+        const string IniKeyArguments = "Arguments";
+        const string IniKeyName = "Name";
+        const string IniKeyPath = "Path";
+
+        const string IniSectionLauncher = "Fallout Launcher";
+        const string IniSectionFOSE = "FOSE";
+        const string IniSectionMO = "Mod Organizer";
+        const string IniSectionCustom = "Custom";
+
+        static string ArgumentsCustom = string.Empty;
+        static string ArgumentsFOSE = string.Empty;
+        static string ArgumentsLauncher = string.Empty;
+        static string ArgumentsModOrganizer = string.Empty;
+
+        static string NameCustom = "Custom";
+
+        static string PathCustom = string.Empty;
         static string PathFOSE = DefaultPathFOSE;
         static string PathLauncher = DefaultPathLauncher;
         static string PathModOrganizer = DefaultPathModOrganizer;
 
+        static bool _customEnabled = true;
         static AutoStart _autoStart = AutoStart.None;
         static ConsoleKeyInfo _input;
         static StreamWriter _log;
@@ -82,14 +102,29 @@ namespace FalloutLauncher
             _log.WriteLine(DateTime.Now);
             _log.WriteLine("Steam FalloutLauncher ({0})", Version);
 
+            // Process INI first, as arguments has priority
+            ProcessINI();
+
             if (!ProcessArguments(args))
                 goto exit; // Exit if application fails to process arguments
 
+            _customEnabled = !string.IsNullOrEmpty(PathCustom);
+
             // Print after processing arguments
             _log.WriteLine();
-            _log.WriteLine("Fallout 3 Launcher path: \"{0}\"", PathLauncher);
-            _log.WriteLine("FOSE path: \"{0}\"", PathFOSE);
-            _log.WriteLine("Mod Organizer path: \"{0}\"", PathModOrganizer);
+            _log.WriteLine("Fallout 3 Launcher -");
+            _log.WriteLine("    Path: {0}", PathLauncher);
+            _log.WriteLine("    Arguments: {0}", ArgumentsLauncher);
+            _log.WriteLine("FOSE -");
+            _log.WriteLine("    Path: {0}", PathFOSE);
+            _log.WriteLine("    Arguments: {0}", ArgumentsFOSE);
+            _log.WriteLine("Mod Organizer -");
+            _log.WriteLine("    Path: {0}", PathModOrganizer);
+            _log.WriteLine("    Arguments: {0}", ArgumentsModOrganizer);
+            _log.WriteLine("Custom -");
+            _log.WriteLine("    Name: {0}", NameCustom);
+            _log.WriteLine("    Path: {0}", PathCustom);
+            _log.WriteLine("    Arguments: {0}", ArgumentsCustom);
             _log.WriteLine();
 
             // Try to automatically find original launcher and Mod Organizer,
@@ -106,14 +141,25 @@ namespace FalloutLauncher
                 case AutoStart.None:
                     ShowMainPage();
                     break;
+                case AutoStart.Custom:
+                    if (!_customEnabled)
+                    {
+                        WriteAndLogLine("{0} was selected, but the path is empty.", NameCustom);
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue...");
+                        Console.ReadKey();
+                        break;
+                    }
+                    Start(NameCustom, PathCustom, ArgumentsCustom, true);
+                    break;
                 case AutoStart.FOSE:
-                    Start("FOSE", PathFOSE, true);
+                    Start("FOSE", PathFOSE, ArgumentsFOSE, true);
                     break;
                 case AutoStart.Launcher:
-                    Start("Fallout 3 Launcher", PathLauncher, true);
+                    Start("Fallout 3 Launcher", PathLauncher, ArgumentsLauncher, true);
                     break;
                 case AutoStart.ModOrganizer:
-                    Start("Mod Organizer", PathModOrganizer, true);
+                    Start("Mod Organizer", PathModOrganizer, ArgumentsModOrganizer, true);
                     break;
             }
 
@@ -145,6 +191,42 @@ namespace FalloutLauncher
                 0,
                 0,
                 SWP_NOSIZE);
+        }
+
+        /// <summary>
+        /// Creates an empty INI file for the user to configure.
+        /// </summary>
+        static void CreateEmptyIni(IniManager ini)
+        {
+            // Fallout Launcher
+            ini.GetSection(IniSectionLauncher)
+                .InsertComment("Leave empty to ignore")
+                .Add(IniKeyPath, string.Empty)
+                .Add(IniKeyArguments, string.Empty)
+                .InsertEmptyLine();
+
+            // FOSE
+            ini.GetSection(IniSectionFOSE)
+                .InsertComment("Leave empty to ignore")
+                .Add(IniKeyPath, string.Empty)
+                .Add(IniKeyArguments, string.Empty)
+                .InsertEmptyLine();
+
+            // Mod Organizer
+            ini.GetSection(IniSectionMO)
+                .InsertComment("Leave empty to ignore")
+                .Add(IniKeyPath, string.Empty)
+                .Add(IniKeyArguments, string.Empty)
+                .InsertEmptyLine();
+
+            // Custom
+            ini.GetSection(IniSectionCustom)
+                .InsertComment("Leave empty to ignore")
+                .Add(IniKeyName, string.Empty)
+                .Add(IniKeyPath, string.Empty)
+                .Add(IniKeyArguments, string.Empty);
+
+            ini.Save();
         }
 
         /// <summary>
@@ -186,6 +268,9 @@ namespace FalloutLauncher
                             case "mo":
                                 _autoStart = AutoStart.ModOrganizer;
                                 break;
+                            case "custom":
+                                _autoStart = AutoStart.Custom;
+                                break;
                         }
                         break;
                     default:
@@ -200,6 +285,59 @@ namespace FalloutLauncher
         }
 
         /// <summary>
+        /// Processes the INI file, applying any changes.
+        /// </summary>
+        static void ProcessINI()
+        {
+            if (!File.Exists(IniFile))
+                return;
+
+            var ini = new IniManager(IniFile);
+
+            ini.ReturnDefaultIfEmpty = true;
+
+            // Create template INI if the file exists AND is empty
+            if (string.IsNullOrEmpty(File.ReadAllText(IniFile)))
+            {
+                CreateEmptyIni(ini);
+                return;
+            }
+            else
+            {
+                ini.Load();
+            }
+
+            if (ini.Contains(IniSectionLauncher))
+            {
+                // Fallout Launcher
+                PathLauncher = ini.GetString(IniSectionLauncher, IniKeyPath, PathLauncher);
+                ArgumentsLauncher = ini.GetString(IniSectionLauncher, IniKeyArguments, ArgumentsLauncher);
+            }
+
+            if (ini.Contains(IniSectionFOSE))
+            {
+                // FOSE
+                PathFOSE = ini.GetString(IniSectionFOSE, IniKeyPath, PathFOSE);
+                ArgumentsFOSE = ini.GetString(IniSectionFOSE, IniKeyArguments, ArgumentsFOSE);
+            }
+
+            if (ini.Contains(IniSectionMO))
+            {
+                // Mod Organizer
+                PathModOrganizer = ini.GetString(IniSectionMO, IniKeyPath, PathModOrganizer);
+                ArgumentsModOrganizer = ini.GetString(IniSectionMO, IniKeyArguments, ArgumentsModOrganizer);
+            }
+
+            if (ini.Contains(IniSectionCustom))
+            {
+                // Custom
+                NameCustom = ini.GetString(IniSectionCustom, IniKeyName, NameCustom);
+                PathCustom = ini.GetString(IniSectionCustom, IniKeyPath, PathCustom);
+                ArgumentsCustom = ini.GetString(IniSectionCustom, IniKeyArguments, ArgumentsCustom);
+            }
+        }
+
+        /// <summary>
         /// Shows the main page after clearing.
         /// </summary>
         static void ShowMainPage()
@@ -209,6 +347,10 @@ namespace FalloutLauncher
             Console.WriteLine("1:   Fallout 3 Launcher");
             Console.WriteLine("2:   FOSE");
             Console.WriteLine("3:   Mod Organizer");
+
+            if (_customEnabled)
+                Console.WriteLine("4:   {0}", NameCustom);
+
             Console.WriteLine();
             Console.WriteLine("Esc: Exit");
             Console.WriteLine();
@@ -224,13 +366,19 @@ namespace FalloutLauncher
             switch (_input.Key)
             {
                 case ConsoleKey.D1:
-                    Start("Fallout 3 Launcher", PathLauncher, true);
+                    Start("Fallout 3 Launcher", PathLauncher, ArgumentsLauncher, true);
                     break;
                 case ConsoleKey.D2:
-                    Start("FOSE", PathFOSE, true);
+                    Start("FOSE", PathFOSE, ArgumentsFOSE, true);
                     break;
                 case ConsoleKey.D3:
-                    Start("Mod Organizer", PathModOrganizer, true);
+                    Start("Mod Organizer", PathModOrganizer, ArgumentsModOrganizer, true);
+                    break;
+                case ConsoleKey.D4:
+                    if (!_customEnabled)
+                        goto default;
+
+                    Start(NameCustom, PathCustom, ArgumentsCustom, true);
                     break;
                 case ConsoleKey.Escape:
                     _log.WriteLine("Exiting...");
@@ -254,7 +402,7 @@ namespace FalloutLauncher
         /// <paramref name="name"/> variable is used only in the console to inform the user of progress.
         /// <param name="quiet">Set to true to quietly start process, unless there is an error.</param>
         /// </summary>
-        static void Start(string name, string path, bool quiet)
+        static void Start(string name, string path, string arguments, bool quiet)
         {
             if (!File.Exists(path))
             {
@@ -270,7 +418,12 @@ namespace FalloutLauncher
                     else
                         WriteAndLogLine("Attempting to start {0}...", name);
 
-                    Process.Start(path);
+                    var psi = new ProcessStartInfo(path);
+
+                    if (!string.IsNullOrEmpty(arguments))
+                        psi.Arguments = arguments;
+
+                    Process.Start(psi);
 
                     if (quiet)
                         _log.WriteLine("Successful! Now exiting...");
@@ -348,6 +501,7 @@ namespace FalloutLauncher
     enum AutoStart
     {
         None,
+        Custom,
         FOSE,
         Launcher,
         ModOrganizer
