@@ -359,7 +359,7 @@ namespace FalloutLauncher
             if (_input.KeyChar == '\0')
                 _input = Console.ReadKey();
 
-            _log.WriteLine("Input character: " + _input.KeyChar);
+            _log.WriteLine("Input character: " + _input.Key.ToString());
 
             Console.Clear();
 
