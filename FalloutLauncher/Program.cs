@@ -366,15 +366,19 @@ namespace FalloutLauncher
             switch (_input.Key)
             {
                 case ConsoleKey.D1:
+                case ConsoleKey.NumPad1:
                     Start("Fallout 3 Launcher", PathLauncher, ArgumentsLauncher, true);
                     break;
                 case ConsoleKey.D2:
+                case ConsoleKey.NumPad2:
                     Start("FOSE", PathFOSE, ArgumentsFOSE, true);
                     break;
                 case ConsoleKey.D3:
+                case ConsoleKey.NumPad3:
                     Start("Mod Organizer", PathModOrganizer, ArgumentsModOrganizer, true);
                     break;
                 case ConsoleKey.D4:
+                case ConsoleKey.NumPad4:
                     if (!_customEnabled)
                         goto default;
 
