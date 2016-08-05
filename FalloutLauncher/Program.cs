@@ -510,11 +510,11 @@ namespace FalloutLauncher
         static string FindModOrganizer()
         {
             var directory = new DirectoryInfo(Environment.CurrentDirectory);
-            var foundDirs = directory.GetDirectories("Mod*Organizer", SearchOption.TopDirectoryOnly);
+            var foundDirs = directory.GetDirectories("*Mod*Organizer*", SearchOption.TopDirectoryOnly);
 
             foreach (var dir in foundDirs)
             {
-                var foundExes = dir.GetFiles("Mod*Organizer.exe", SearchOption.TopDirectoryOnly);
+                var foundExes = dir.GetFiles("*Mod*Organizer*.exe", SearchOption.TopDirectoryOnly);
 
                 if (foundExes.Length > 0)
                     return foundExes[0].FullName;
