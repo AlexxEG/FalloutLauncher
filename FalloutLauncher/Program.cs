@@ -100,7 +100,7 @@ namespace FalloutLauncher
 
             _log.WriteLine("================ START ================");
             _log.WriteLine(DateTime.Now);
-            _log.WriteLine("Steam FalloutLauncher ({0})", Version);
+            _log.WriteLine("v" + Version);
 
             // Process INI first, as arguments has priority
             ProcessINI();
@@ -108,33 +108,55 @@ namespace FalloutLauncher
             if (!ProcessArguments(args))
                 goto exit; // Exit if application fails to process arguments
 
-            _customEnabled = !string.IsNullOrEmpty(PathCustom);
-
             // Print after processing arguments
-            _log.WriteLine();
-            _log.WriteLine("Fallout 3 Launcher -");
-            _log.WriteLine("    Path: {0}", PathLauncher);
-            _log.WriteLine("    Arguments: {0}", ArgumentsLauncher);
-            _log.WriteLine("FOSE -");
-            _log.WriteLine("    Path: {0}", PathFOSE);
-            _log.WriteLine("    Arguments: {0}", ArgumentsFOSE);
-            _log.WriteLine("Mod Organizer -");
-            _log.WriteLine("    Path: {0}", PathModOrganizer);
-            _log.WriteLine("    Arguments: {0}", ArgumentsModOrganizer);
-            _log.WriteLine("Custom -");
-            _log.WriteLine("    Name: {0}", NameCustom);
-            _log.WriteLine("    Path: {0}", PathCustom);
-            _log.WriteLine("    Arguments: {0}", ArgumentsCustom);
-            _log.WriteLine();
+            _log.WriteLine("Fallout 3 Launcher");
+            _log.WriteLine("    path: {0}", PathLauncher);
+            _log.WriteLine("    arguments: {0}", ArgumentsLauncher);
+            _log.WriteLine("FOSE");
+            _log.WriteLine("    path: {0}", PathFOSE);
+            _log.WriteLine("    arguments: {0}", ArgumentsFOSE);
+            _log.WriteLine("Mod Organizer");
+            _log.WriteLine("    path: {0}", PathModOrganizer);
+            _log.WriteLine("    arguments: {0}", ArgumentsModOrganizer);
+            _log.WriteLine("Custom");
+            _log.WriteLine("    name: {0}", NameCustom);
+            _log.WriteLine("    path: {0}", PathCustom);
+            _log.WriteLine("    arguments: {0}", ArgumentsCustom);
+            _log.WriteLine("-");
+
+            _customEnabled = !string.IsNullOrEmpty(PathCustom);
+            _log.WriteLine("Fallout3Launcher found: " + File.Exists(PathLauncher));
+            _log.WriteLine("FOSE found: " + File.Exists(PathFOSE));
+            _log.WriteLine("Mod Organizer found: " + File.Exists(PathModOrganizer));
+            _log.WriteLine("custom option enabled: " + _customEnabled);
+
+            if (_customEnabled)
+                _log.WriteLine("custom option found: " + File.Exists(PathCustom));
 
             // Try to automatically find original launcher and Mod Organizer,
             // but don't if they have been changed, that means they was set with an argument.
 
             if (PathLauncher == DefaultPathLauncher)
+            {
                 PathLauncher = FindLauncher();
 
+                if (PathLauncher != DefaultPathLauncher)
+                {
+                    _log.WriteLine("found Fallout3Launcher at: {0}", PathLauncher);
+                }
+            }
+
             if (PathModOrganizer == DefaultPathModOrganizer)
+            {
                 PathModOrganizer = FindModOrganizer();
+
+                if (PathModOrganizer != DefaultPathModOrganizer)
+                {
+                    _log.WriteLine("found Fallout 3 Launcher at: {0}", PathLauncher);
+                }
+            }
+
+            _log.WriteLine("-");
 
             switch (_autoStart)
             {
@@ -235,7 +257,7 @@ namespace FalloutLauncher
         static bool ProcessArguments(string[] args)
         {
             if (args != null && args.Length > 0)
-                _log.WriteLine("Arguments: {0}", string.Join(" ", args));
+                _log.WriteLine("arguments: {0}", string.Join(" ", args));
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -359,7 +381,7 @@ namespace FalloutLauncher
             if (_input.KeyChar == '\0')
                 _input = Console.ReadKey();
 
-            _log.WriteLine("Input character: " + _input.Key.ToString());
+            _log.WriteLine("input character: " + _input.Key.ToString());
 
             Console.Clear();
 
@@ -385,7 +407,7 @@ namespace FalloutLauncher
                     Start(NameCustom, PathCustom, ArgumentsCustom, true);
                     break;
                 case ConsoleKey.Escape:
-                    _log.WriteLine("Exiting...");
+                    _log.WriteLine("exiting...");
                     break;
                 default:
                     WriteAndLogLine("Unrecognized input: {{{0}}}", _input.Key);
@@ -418,7 +440,7 @@ namespace FalloutLauncher
                 try
                 {
                     if (quiet)
-                        _log.WriteLine("Attempting to start {0}...", name);
+                        _log.WriteLine("attempting to start {0}...", name);
                     else
                         WriteAndLogLine("Attempting to start {0}...", name);
 
@@ -430,7 +452,7 @@ namespace FalloutLauncher
                     Process.Start(psi);
 
                     if (quiet)
-                        _log.WriteLine("Successful! Now exiting...");
+                        _log.WriteLine("successful! Now exiting...");
                     else
                         WriteAndLogLine("Successful! Now exiting...");
                 }
