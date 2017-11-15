@@ -115,26 +115,11 @@ namespace FalloutLauncher
 
         #endregion
 
-        static void Main(string[] args)
+        static void WriteLogHeader()
         {
-            Console.Title = "FalloutLauncher " + Version;
-
-            CenterConsole();
-
-            _log = new StreamWriter(LogFile, true)
-            {
-                AutoFlush = true
-            };
-
             _log.WriteLine("================ START ================");
             _log.WriteLine(DateTime.Now);
             _log.WriteLine("v" + Version);
-
-            // Process INI first, as arguments has priority
-            ProcessINI();
-
-            if (!ProcessArguments(args))
-                goto exit; // Exit if application fails to process arguments
 
             // Print after processing arguments
             _log.WriteLine("Fallout 3 Launcher");
@@ -152,7 +137,6 @@ namespace FalloutLauncher
             _log.WriteLine("    arguments: {0}", ArgumentsCustom);
             _log.WriteLine("-");
 
-            _customEnabled = !string.IsNullOrEmpty(PathCustom);
             _log.WriteLine("Fallout3Launcher found: " + File.Exists(PathLauncher));
             _log.WriteLine("FOSE found: " + File.Exists(PathFOSE));
             _log.WriteLine("Mod Organizer found: " + File.Exists(PathModOrganizer));
@@ -160,6 +144,28 @@ namespace FalloutLauncher
 
             if (_customEnabled)
                 _log.WriteLine("custom option found: " + File.Exists(PathCustom));
+        }
+
+        static void Main(string[] args)
+        {
+            Console.Title = "FalloutLauncher " + Version;
+
+            CenterConsole();
+
+            _log = new StreamWriter(LogFile, true)
+            {
+                AutoFlush = true
+            };
+
+            // Process INI first, as arguments has priority
+            ProcessINI();
+
+            if (!ProcessArguments(args))
+                goto exit; // Exit if application fails to process arguments
+
+            _customEnabled = !string.IsNullOrEmpty(PathCustom);
+
+            WriteLogHeader();
 
             // Try to automatically find original launcher and Mod Organizer,
             // but don't if they have been changed, that means they was set with an argument.
