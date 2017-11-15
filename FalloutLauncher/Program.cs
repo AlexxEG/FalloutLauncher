@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Ini;
@@ -33,6 +34,8 @@ namespace FalloutLauncher
         const string IniSectionMO = "Mod Organizer";
         const string IniSectionCustom = "Custom";
 
+        static bool Quiet = true;
+
         static string ArgumentsCustom = string.Empty;
         static string ArgumentsFOSE = string.Empty;
         static string ArgumentsLauncher = string.Empty;
@@ -41,14 +44,39 @@ namespace FalloutLauncher
         static string NameCustom = "Custom";
 
         static string PathCustom = string.Empty;
-        static string PathFOSE = DefaultPathFOSE;
-        static string PathLauncher = DefaultPathLauncher;
-        static string PathModOrganizer = DefaultPathModOrganizer;
 
         static bool _customEnabled = true;
-        static AutoStart _autoStart = AutoStart.None;
         static ConsoleKeyInfo _input;
         static StreamWriter _log;
+
+        static AutoStart AutoStart
+        {
+            get { return (AutoStart)arguments[FlagStart]; }
+        }
+
+        static string PathFOSE
+        {
+            get { return arguments[FlagFOSE].ToString(); }
+            set { arguments[FlagFOSE] = value; }
+        }
+        static string PathLauncher
+        {
+            get { return arguments[FlagLauncher].ToString(); }
+            set { arguments[FlagLauncher] = value; }
+        }
+        static string PathModOrganizer
+        {
+            get { return arguments[FlagMO].ToString(); }
+            set { arguments[FlagMO] = value; }
+        }
+
+        static Dictionary<string, object> arguments = new Dictionary<string, object>()
+        {
+            { FlagFOSE, DefaultPathFOSE },
+            { FlagLauncher, DefaultPathLauncher },
+            { FlagMO, DefaultPathModOrganizer },
+            { FlagStart, AutoStart.None }
+        };
 
         static string Version
         {
@@ -158,7 +186,7 @@ namespace FalloutLauncher
 
             _log.WriteLine("-");
 
-            switch (_autoStart)
+            switch (AutoStart)
             {
                 case AutoStart.None:
                     ShowMainPage();
@@ -172,20 +200,20 @@ namespace FalloutLauncher
                         Console.ReadKey();
                         break;
                     }
-                    Start(NameCustom, PathCustom, ArgumentsCustom, true);
+                    Start(NameCustom, PathCustom, ArgumentsCustom);
                     break;
                 case AutoStart.FOSE:
-                    Start("FOSE", PathFOSE, ArgumentsFOSE, true);
+                    Start("FOSE", PathFOSE, ArgumentsFOSE);
                     break;
                 case AutoStart.Launcher:
-                    Start("Fallout 3 Launcher", PathLauncher, ArgumentsLauncher, true);
+                    Start("Fallout 3 Launcher", PathLauncher, ArgumentsLauncher);
                     break;
-                case AutoStart.ModOrganizer:
-                    Start("Mod Organizer", PathModOrganizer, ArgumentsModOrganizer, true);
+                case AutoStart.MO:
+                    Start("Mod Organizer", PathModOrganizer, ArgumentsModOrganizer);
                     break;
             }
 
-        exit:
+            exit:
 
             _log.WriteLine("================= END =================");
             _log.WriteLine();
@@ -261,43 +289,21 @@ namespace FalloutLauncher
 
             for (int i = 0; i < args.Length; i++)
             {
-                string arg = args[i];
+                string flag = args[i];
 
-                switch (arg.ToLower())
+                switch (flag.ToLower())
                 {
                     case FlagFOSE:
-                        i++;
-                        PathFOSE = args[i];
-                        break;
                     case FlagLauncher:
-                        i++;
-                        PathLauncher = args[i];
-                        break;
                     case FlagMO:
-                        i++;
-                        PathModOrganizer = args[i];
+                        arguments[flag] = args[++i];
                         break;
                     case FlagStart:
-                        i++;
-                        switch (args[i].ToLower())
-                        {
-                            case "launcher":
-                                _autoStart = AutoStart.Launcher;
-                                break;
-                            case "fose":
-                                _autoStart = AutoStart.FOSE;
-                                break;
-                            case "mo":
-                                _autoStart = AutoStart.ModOrganizer;
-                                break;
-                            case "custom":
-                                _autoStart = AutoStart.Custom;
-                                break;
-                        }
+                        arguments[flag] = (AutoStart)Enum.Parse(typeof(AutoStart), args[++i].ToLower(), true);
                         break;
                     default:
                         // Handle unrecognized flag
-                        WriteAndLogLine("Unrecognized flag: " + arg);
+                        WriteAndLogLine("Unrecognized flag: " + flag);
                         Console.ReadKey();
                         return false;
                 }
@@ -389,22 +395,22 @@ namespace FalloutLauncher
             {
                 case ConsoleKey.D1:
                 case ConsoleKey.NumPad1:
-                    Start("Fallout 3 Launcher", PathLauncher, ArgumentsLauncher, true);
+                    Start("Fallout 3 Launcher", PathLauncher, ArgumentsLauncher);
                     break;
                 case ConsoleKey.D2:
                 case ConsoleKey.NumPad2:
-                    Start("FOSE", PathFOSE, ArgumentsFOSE, true);
+                    Start("FOSE", PathFOSE, ArgumentsFOSE);
                     break;
                 case ConsoleKey.D3:
                 case ConsoleKey.NumPad3:
-                    Start("Mod Organizer", PathModOrganizer, ArgumentsModOrganizer, true);
+                    Start("Mod Organizer", PathModOrganizer, ArgumentsModOrganizer);
                     break;
                 case ConsoleKey.D4:
                 case ConsoleKey.NumPad4:
                     if (!_customEnabled)
                         goto default;
 
-                    Start(NameCustom, PathCustom, ArgumentsCustom, true);
+                    Start(NameCustom, PathCustom, ArgumentsCustom);
                     break;
                 case ConsoleKey.Escape:
                     _log.WriteLine("exiting...");
@@ -426,9 +432,8 @@ namespace FalloutLauncher
         /// <summary>
         /// Starts an executable from the <paramref name="path"/> variable.
         /// <paramref name="name"/> variable is used only in the console to inform the user of progress.
-        /// <param name="quiet">Set to true to quietly start process, unless there is an error.</param>
         /// </summary>
-        static void Start(string name, string path, string arguments, bool quiet)
+        static void Start(string name, string path, string arguments)
         {
             if (!File.Exists(path))
             {
@@ -439,10 +444,7 @@ namespace FalloutLauncher
             {
                 try
                 {
-                    if (quiet)
-                        _log.WriteLine("attempting to start {0}...", name);
-                    else
-                        WriteAndLogLine("Attempting to start {0}...", name);
+                    WriteAndLogLine("Attempting to start {0}...", name);
 
                     var psi = new ProcessStartInfo(path);
 
@@ -451,10 +453,7 @@ namespace FalloutLauncher
 
                     Process.Start(psi);
 
-                    if (quiet)
-                        _log.WriteLine("successful! Now exiting...");
-                    else
-                        WriteAndLogLine("Successful! Now exiting...");
+                    WriteAndLogLine("Successful! Now exiting...");
                 }
                 catch (Exception ex)
                 {
@@ -474,7 +473,8 @@ namespace FalloutLauncher
         static void WriteAndLogLine(string message, params object[] args)
         {
             _log.WriteLine(message, args);
-            Console.WriteLine(message, args);
+            if (!Quiet)
+                Console.WriteLine(message, args);
         }
 
         /// <summary>
@@ -483,7 +483,8 @@ namespace FalloutLauncher
         static void WriteAndLogLine(object value)
         {
             _log.WriteLine(value);
-            Console.WriteLine(value);
+            if (!Quiet)
+                Console.WriteLine(value);
         }
 
         /// <summary>
@@ -530,6 +531,6 @@ namespace FalloutLauncher
         Custom,
         FOSE,
         Launcher,
-        ModOrganizer
+        MO
     }
 }
