@@ -450,7 +450,10 @@ namespace FalloutLauncher
             {
                 try
                 {
-                    WriteAndLogLine("Attempting to start {0}...", name);
+                    if (Quiet)
+                        _log.WriteLine("attempting to start {0}...", name);
+                    else
+                        WriteAndLogLine("Attempting to start {0}...", name);
 
                     var psi = new ProcessStartInfo(path);
 
@@ -459,7 +462,10 @@ namespace FalloutLauncher
 
                     Process.Start(psi);
 
-                    WriteAndLogLine("Successful! Now exiting...");
+                    if (Quiet)
+                        _log.WriteLine("successful! Now exiting...");
+                    else
+                        WriteAndLogLine("Successful! Now exiting...");
                 }
                 catch (Exception ex)
                 {
@@ -479,8 +485,7 @@ namespace FalloutLauncher
         static void WriteAndLogLine(string message, params object[] args)
         {
             _log.WriteLine(message, args);
-            if (!Quiet)
-                Console.WriteLine(message, args);
+            Console.WriteLine(message, args);
         }
 
         /// <summary>
@@ -489,8 +494,7 @@ namespace FalloutLauncher
         static void WriteAndLogLine(object value)
         {
             _log.WriteLine(value);
-            if (!Quiet)
-                Console.WriteLine(value);
+            Console.WriteLine(value);
         }
 
         /// <summary>
