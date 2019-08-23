@@ -326,9 +326,10 @@ namespace FalloutLauncher
             if (!File.Exists(IniFile))
                 return;
 
-            var ini = new IniManager(IniFile);
-
-            ini.ReturnDefaultIfEmpty = true;
+            var ini = new IniManager(IniFile)
+            {
+                ReturnDefaultIfEmpty = true
+            };
 
             // Create template INI if the file exists AND is empty
             if (string.IsNullOrEmpty(File.ReadAllText(IniFile)))
