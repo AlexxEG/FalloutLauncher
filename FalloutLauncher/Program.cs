@@ -172,8 +172,15 @@ namespace FalloutLauncher
                 }
             }
 
-            if (!ProcessArguments(args))
+            try
+            {
+                ProcessArguments(args)
+            }
+            catch (ArgumentException ex)
+            {
+                WriteAndLogLine(ex.Message);
                 goto exit; // Exit if application fails to process arguments
+            }
 
             _customEnabled = !string.IsNullOrEmpty(PathCustom);
 
@@ -300,7 +307,7 @@ namespace FalloutLauncher
         /// <summary>
         /// Processes the application arguments, setting the static variables.
         /// </summary>
-        static bool ProcessArguments(string[] args)
+        static void ProcessArguments(string[] args)
         {
             if (args != null && args.Length > 0)
                 _log.WriteLine("arguments: {0}", string.Join(" ", args));
@@ -320,14 +327,9 @@ namespace FalloutLauncher
                         arguments[flag] = (AutoStart)Enum.Parse(typeof(AutoStart), args[++i].ToLower(), true);
                         break;
                     default:
-                        // Handle unrecognized flag
-                        WriteAndLogLine("Unrecognized flag: " + flag);
-                        Console.ReadKey();
-                        return false;
+                        throw new ArgumentException($"Unrecognized flag: {flag}");
                 }
             }
-
-            return true;
         }
 
         /// <summary>
