@@ -161,7 +161,7 @@ namespace FalloutLauncher
             Logger.LogLine("Custom option enabled: " + _customEnabled.ToYesNo());
 
             if (_customEnabled)
-                Logger.LogLine("Found custom option: " + File.Exists(PathCustom));
+                Logger.LogLine("Found custom option: " + File.Exists(PathCustom).ToYesNo());
         }
 
         static void Main(string[] args)
