@@ -158,7 +158,19 @@ namespace FalloutLauncher
             };
 
             // Process INI first, as arguments has priority
-            ProcessINI();
+            if (File.Exists(IniFile))
+            {
+                if (string.IsNullOrEmpty(File.ReadAllText(IniFile)))
+                {
+                    // Empty INI found, create template INI
+                    WriteAndLogLine($"Created INI template at {IniFile}");
+                    goto exit;
+                }
+                else
+                {
+                    ProcessINI();
+                }
+            }
 
             if (!ProcessArguments(args))
                 goto exit; // Exit if application fails to process arguments
