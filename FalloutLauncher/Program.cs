@@ -10,6 +10,14 @@ using System.Windows.Forms;
 
 namespace FalloutLauncher
 {
+    static class ExtensionMethods
+    {
+        public static string ToYesNo(this bool value)
+        {
+            return value ? "Yes" : "No";
+        }
+    }
+
     class Program
     {
         const string IniFile = "FalloutLauncher.ini";
@@ -47,7 +55,7 @@ namespace FalloutLauncher
 
         static bool _customEnabled = true;
         static ConsoleKeyInfo _input;
-        static StreamWriter _log;
+        static Logger Logger = new Logger(LogFile);
 
         static AutoStart AutoStart
         {
@@ -117,59 +125,58 @@ namespace FalloutLauncher
 
         static void WriteLogHeader()
         {
-            _log.WriteLine("================ START ================");
-            _log.WriteLine(DateTime.Now);
-            _log.WriteLine("v" + Version);
+            Logger.LogLine("================ START ================", noPrefix: true);
+            Logger.LogLine($"FalloutLauncher v{Version}");
+        }
 
+        static void WriteLogArguments()
+        {
             // Print after processing arguments
-            _log.WriteLine("Fallout 3 Launcher");
-            _log.WriteLine("    path: {0}", PathLauncher);
-            _log.WriteLine("    arguments: {0}", ArgumentsLauncher);
-            _log.WriteLine("FOSE");
-            _log.WriteLine("    path: {0}", PathFOSE);
-            _log.WriteLine("    arguments: {0}", ArgumentsFOSE);
-            _log.WriteLine("Mod Organizer");
-            _log.WriteLine("    path: {0}", PathModOrganizer);
-            _log.WriteLine("    arguments: {0}", ArgumentsModOrganizer);
-            _log.WriteLine("Custom");
-            _log.WriteLine("    name: {0}", NameCustom);
-            _log.WriteLine("    path: {0}", PathCustom);
-            _log.WriteLine("    arguments: {0}", ArgumentsCustom);
-            _log.WriteLine("-");
+            Logger.LogLine("[Fallout 3 Launcher]");
+            Logger.LogLine("    Path: {0}", PathLauncher);
+            Logger.LogLine("    Arguments: {0}", ArgumentsLauncher);
+            Logger.LogLine("[FOSE]");
+            Logger.LogLine("    Path: {0}", PathFOSE);
+            Logger.LogLine("    Arguments: {0}", ArgumentsFOSE);
+            Logger.LogLine("[Mod Organizer]");
+            Logger.LogLine("    Path: {0}", PathModOrganizer);
+            Logger.LogLine("    Arguments: {0}", ArgumentsModOrganizer);
+            Logger.LogLine("[Custom]");
+            Logger.LogLine("    Name: {0}", NameCustom);
+            Logger.LogLine("    Path: {0}", PathCustom);
+            Logger.LogLine("    Arguments: {0}", ArgumentsCustom);
 
-            _log.WriteLine("Fallout3Launcher found: " + File.Exists(PathLauncher));
-            _log.WriteLine("FOSE found: " + File.Exists(PathFOSE));
-            _log.WriteLine("Mod Organizer found: " + File.Exists(PathModOrganizer));
-            _log.WriteLine("custom option enabled: " + _customEnabled);
+            Logger.LogLine("Found Fallout3Launcher: " + File.Exists(PathLauncher).ToYesNo());
+            Logger.LogLine("Found FOSE: " + File.Exists(PathFOSE).ToYesNo());
+            Logger.LogLine("Found Mod Organizer: " + File.Exists(PathModOrganizer).ToYesNo());
+            Logger.LogLine("Custom option enabled: " + _customEnabled.ToYesNo());
 
             if (_customEnabled)
-                _log.WriteLine("custom option found: " + File.Exists(PathCustom));
+                Logger.LogLine("Found custom option: " + File.Exists(PathCustom));
         }
 
         static void Main(string[] args)
         {
+            // Setup console
             Console.Title = "FalloutLauncher " + Version;
-
             CenterConsole();
 
-            _log = new StreamWriter(LogFile, true)
-            {
-                AutoFlush = true
-            };
+            // Write log header
+            WriteLogHeader();
 
             // Process INI first, as arguments has priority
             if (File.Exists(IniFile))
             {
-                if (string.IsNullOrEmpty(File.ReadAllText(IniFile)))
+                if (!string.IsNullOrEmpty(File.ReadAllText(IniFile)))
                 {
-                    // Empty INI found, create template INI
-                    CreateEmptyIni();
-                    WriteAndLogLine($"Created INI template at {IniFile}");
-                    goto exit;
+                    ProcessINI();
                 }
                 else
                 {
-                    ProcessINI();
+                    // Empty INI found, create template INI
+                    CreateEmptyIni();
+                    Logger.WriteAndLogLine($"Created INI template at {IniFile}");
+                    goto exit;
                 }
             }
 
@@ -179,13 +186,13 @@ namespace FalloutLauncher
             }
             catch (ArgumentException ex)
             {
-                WriteAndLogLine(ex.Message);
+                Logger.WriteAndLogLine(ex.Message);
                 goto exit; // Exit if application fails to process arguments
             }
 
             _customEnabled = !string.IsNullOrEmpty(PathCustom);
 
-            WriteLogHeader();
+            WriteLogArguments();
 
             // Try to automatically find original launcher and Mod Organizer,
             // but don't if they have been changed, that means they was set with an argument.
@@ -196,7 +203,7 @@ namespace FalloutLauncher
 
                 if (PathLauncher != DefaultPathLauncher)
                 {
-                    _log.WriteLine("found Fallout3Launcher at: {0}", PathLauncher);
+                    Logger.LogLine("Found Fallout3Launcher at: {0}", PathLauncher);
                 }
             }
 
@@ -206,11 +213,9 @@ namespace FalloutLauncher
 
                 if (PathModOrganizer != DefaultPathModOrganizer)
                 {
-                    _log.WriteLine("found Fallout 3 Launcher at: {0}", PathLauncher);
+                    Logger.LogLine("Found Fallout 3 Launcher at: {0}", PathLauncher);
                 }
             }
-
-            _log.WriteLine("-");
 
             switch (AutoStart)
             {
@@ -220,7 +225,7 @@ namespace FalloutLauncher
                 case AutoStart.Custom:
                     if (!_customEnabled)
                     {
-                        WriteAndLogLine("{0} was selected, but the path is empty.", NameCustom);
+                        Logger.WriteAndLogLine("{0} was selected, but the path is empty.", NameCustom);
                         Console.WriteLine();
                         Console.WriteLine("Press any key to continue...");
                         Console.ReadKey();
@@ -240,12 +245,8 @@ namespace FalloutLauncher
             }
 
         exit:
-
-            _log.WriteLine("================= END =================");
-            _log.WriteLine();
-
-            _log.Flush();
-            _log.Close();
+            Logger.LogLine();
+            Logger.Close();
         }
 
         /// <summary>
@@ -316,7 +317,7 @@ namespace FalloutLauncher
         static void ProcessArguments(string[] args)
         {
             if (args != null && args.Length > 0)
-                _log.WriteLine("arguments: {0}", string.Join(" ", args));
+                Logger.LogLine("Arguments: {0}", string.Join(", ", args));
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -392,7 +393,7 @@ namespace FalloutLauncher
             Console.WriteLine("3:   Mod Organizer");
 
             if (_customEnabled)
-                Console.WriteLine("4:   {0}", NameCustom);
+                Console.WriteLine($"4:   {NameCustom}");
 
             Console.WriteLine();
             Console.WriteLine("Esc: Exit");
@@ -402,7 +403,7 @@ namespace FalloutLauncher
             if (_input.KeyChar == '\0')
                 _input = Console.ReadKey();
 
-            _log.WriteLine("input character: " + _input.Key.ToString());
+            Logger.LogLine($"Input character: {_input.Key.ToString()}");
 
             Console.Clear();
 
@@ -428,12 +429,12 @@ namespace FalloutLauncher
                     Start(NameCustom, PathCustom, ArgumentsCustom);
                     break;
                 case ConsoleKey.Escape:
-                    _log.WriteLine("exiting...");
+                    Logger.LogLine("Exiting...");
                     break;
                 default:
-                    WriteAndLogLine("Unrecognized input: {{{0}}}", _input.Key);
+                    Logger.WriteAndLogLine($"Unrecognized input: {_input.Key.ToString()}");
                     Console.WriteLine();
-                    Console.WriteLine("Press any key to continue...");
+                    Console.WriteLine("Press any key to try again...");
                     Console.ReadKey();
 
                     // Reset input so it wont auto start when going back
@@ -452,14 +453,14 @@ namespace FalloutLauncher
         {
             if (!File.Exists(path))
             {
-                WriteAndLogLine("Couldn't find {0}, press any key to exit...", name);
+                Logger.WriteAndLogLine($"Couldn't find {name}, press any key to exit...");
                 Console.ReadKey();
             }
             else
             {
                 try
                 {
-                    var log = Quiet ? (Action<string>)_log.WriteLine : WriteAndLogLine;
+                    var log = Quiet ? (Action<string>)Logger.LogLine : Logger.WriteAndLogLine;
 
                     log($"Attempting to start {name}...");
 
@@ -472,32 +473,14 @@ namespace FalloutLauncher
                 }
                 catch (Exception ex)
                 {
-                    WriteAndLogLine("Error starting {0}:", name);
-                    WriteAndLogLine(ex);
+                    Logger.WriteAndLogLine($"Error starting {name}:");
+                    Logger.WriteAndLogLine(ex);
 
                     Console.WriteLine();
                     Console.WriteLine("Press any key to exit...");
                     Console.ReadKey();
                 }
             }
-        }
-
-        /// <summary>
-        /// Writes message to both log and console window.
-        /// </summary>
-        static void WriteAndLogLine(string message, params object[] args)
-        {
-            _log.WriteLine(message, args);
-            Console.WriteLine(message, args);
-        }
-
-        /// <summary>
-        /// Writes message to both log and console window.
-        /// </summary>
-        static void WriteAndLogLine(object value)
-        {
-            _log.WriteLine(value);
-            Console.WriteLine(value);
         }
 
         /// <summary>
