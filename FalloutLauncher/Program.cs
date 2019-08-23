@@ -335,24 +335,12 @@ namespace FalloutLauncher
         /// </summary>
         static void ProcessINI()
         {
-            if (!File.Exists(IniFile))
-                return;
-
             var ini = new IniManager(IniFile)
             {
                 ReturnDefaultIfEmpty = true
             };
 
-            // Create template INI if the file exists AND is empty
-            if (string.IsNullOrEmpty(File.ReadAllText(IniFile)))
-            {
-                CreateEmptyIni(ini);
-                return;
-            }
-            else
-            {
-                ini.Load();
-            }
+            ini.Load();
 
             if (ini.Contains(IniSectionLauncher))
             {
