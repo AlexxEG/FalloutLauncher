@@ -460,6 +460,35 @@ namespace FalloutLauncher
         /// </summary>
         static void Start(string name, string path, string arguments)
         {
+            // Trim quotes if there is
+            if (path.StartsWith("\"") && path.EndsWith("\""))
+            {
+                path = path.Trim('\"');
+                Logger.LogLine("Trimmed path for quotes");
+            }
+
+            if (path.IndexOfAny(Path.GetInvalidPathChars()) > -1)
+            {
+                Logger.Log(Logger.Prefix + "Path contains invalid chars: ");
+                Console.Write("Path contains invalid chars: ");
+
+                foreach (char c in path)
+                {
+                    if (Array.IndexOf(Path.GetInvalidPathChars(), c) > -1)
+                        Console.ForegroundColor = ConsoleColor.Red;
+                    else
+                        Console.ResetColor();
+
+                    Logger.WriteAndLog(c);
+                }
+
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+                return;
+            }
+
             if (!File.Exists(path))
             {
                 Logger.WriteAndLogLine($"Couldn't find {name}, press any key to exit...");

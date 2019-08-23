@@ -5,7 +5,8 @@ namespace FalloutLauncher
 {
     public class Logger
     {
-        private string Prefix => $"[{DateTime.Now}] ";
+        public string Prefix => $"[{DateTime.Now}] ";
+
         private StreamWriter _log;
 
         public Logger(string path)
@@ -39,6 +40,24 @@ namespace FalloutLauncher
         }
 
         /// <summary>
+        /// Writes a string to log and console window.
+        /// </summary>
+        public void WriteAndLog(string value)
+        {
+            _log.Write(value);
+            Console.Write(value);
+        }
+
+        /// <summary>
+        /// Writes a character to log and console window.
+        /// </summary>
+        public void WriteAndLog(char c)
+        {
+            _log.Write(c);
+            Console.Write(c);
+        }
+
+        /// <summary>
         /// Writes to log only.
         /// </summary>
         public void LogLine(string message, params object[] args)
@@ -68,6 +87,14 @@ namespace FalloutLauncher
         public void LogLine()
         {
             _log.WriteLine();
+        }
+
+        /// <summary>
+        /// Writes a string to log and console window.
+        /// </summary>
+        public void Log(string value)
+        {
+            _log.Write(value);
         }
     }
 }
