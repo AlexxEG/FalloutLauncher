@@ -219,7 +219,7 @@ namespace FalloutLauncher
                     break;
             }
 
-            exit:
+        exit:
 
             _log.WriteLine("================= END =================");
             _log.WriteLine();
