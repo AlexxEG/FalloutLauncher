@@ -163,6 +163,7 @@ namespace FalloutLauncher
                 if (string.IsNullOrEmpty(File.ReadAllText(IniFile)))
                 {
                     // Empty INI found, create template INI
+                    CreateEmptyIni();
                     WriteAndLogLine($"Created INI template at {IniFile}");
                     goto exit;
                 }
@@ -271,8 +272,13 @@ namespace FalloutLauncher
         /// <summary>
         /// Creates an empty INI file for the user to configure.
         /// </summary>
-        static void CreateEmptyIni(IniManager ini)
+        static void CreateEmptyIni()
         {
+            var ini = new IniManager(IniFile)
+            {
+                ReturnDefaultIfEmpty = true
+            };
+
             // Fallout Launcher
             ini.GetSection(IniSectionLauncher)
                 .InsertComment("Leave empty to ignore")
