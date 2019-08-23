@@ -10,6 +10,15 @@ using System.Windows.Forms;
 
 namespace FalloutLauncher
 {
+    enum AutoStart
+    {
+        None,
+        Custom,
+        FOSE,
+        Launcher,
+        MO
+    }
+
     static class ExtensionMethods
     {
         public static string ToYesNo(this bool value)
@@ -519,14 +528,5 @@ namespace FalloutLauncher
 
             return DefaultPathModOrganizer;
         }
-    }
-
-    enum AutoStart
-    {
-        None,
-        Custom,
-        FOSE,
-        Launcher,
-        MO
     }
 }
