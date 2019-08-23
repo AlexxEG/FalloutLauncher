@@ -135,7 +135,7 @@ namespace FalloutLauncher
         static void WriteLogHeader()
         {
             Logger.LogLine("================ START ================", noPrefix: true);
-            Logger.LogLine($"FalloutLauncher v{Version}");
+            Logger.LogLine($"FalloutLauncher {Version}");
         }
 
         static void WriteLogArguments()
