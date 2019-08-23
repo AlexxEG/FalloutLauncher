@@ -463,8 +463,8 @@ namespace FalloutLauncher
             // Trim quotes if there is
             if (path.StartsWith("\"") && path.EndsWith("\""))
             {
+                Logger.LogLine($"Trimming path for quotes:  {path} -> {path.Trim('\"')}");
                 path = path.Trim('\"');
-                Logger.LogLine("Trimmed path for quotes");
             }
 
             if (path.IndexOfAny(Path.GetInvalidPathChars()) > -1)
