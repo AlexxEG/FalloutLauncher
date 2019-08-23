@@ -174,7 +174,7 @@ namespace FalloutLauncher
 
             try
             {
-                ProcessArguments(args)
+                ProcessArguments(args);
             }
             catch (ArgumentException ex)
             {
