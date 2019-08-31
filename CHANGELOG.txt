@@ -1,3 +1,13 @@
+[1.5]
+
+- Automatically handle quotes around Paths by ignoring when necessary
+- Improve MO search with/without spacing
+- Allow num pad input
+- Add specific error message for invalid Path characters
+- Improved logging
+- Notify and exit instead of running normally when creating template INI
+- Fixed logging input key
+
 [1.4]
 
 - Added optional INI. Read 'Configuration' section
