@@ -1,6 +1,6 @@
 [1.5]
 
-- Automatically handle quotes around Paths by ignoring when necessary
+- Automatically handle quotes around Paths by ignoring when necessary (in configuration only, quotes are still needed when using flags/arguments)
 - Improve MO search with/without spacing
 - Allow num pad input
 - Add specific error message for invalid Path characters
